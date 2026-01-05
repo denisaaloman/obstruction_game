@@ -16,7 +16,7 @@ CELL_SIZE = 60  #pixels
 class ObstructionGUI:
     def __init__(self, game):
         self.game = game
-        self.board = game.getboard()
+        self.board = game.board
         self.rows = self.board.height
         self.cols = self.board.width
         pygame.init()
@@ -87,7 +87,6 @@ class ObstructionGUI:
             clock.tick(60)
         pygame.quit()
 
-
 if __name__ == "__main__":
     # Get board size
     s = Settings()
@@ -96,8 +95,8 @@ if __name__ == "__main__":
     game = Game(board)
     gui = ObstructionGUI(game)
     gui.run()
-
 """
+
 
 from domain.board import Board
 from validators import *
@@ -149,6 +148,3 @@ class UI:
                 print("\033[1;36m Human has won!")
 
 """
-
-
-

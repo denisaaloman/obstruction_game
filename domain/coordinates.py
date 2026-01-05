@@ -1,7 +1,7 @@
 class Coordinates:
     def __init__(self, boardX, boardY):
         '''
-        class constructor, here we have the coordinates X and Y
+        class constructor
         '''
         self._boardX = boardX
         self._boardY = boardY
@@ -12,6 +12,14 @@ class Coordinates:
     @property
     def boardY(self):
         return self._boardY
+
+    def __lt__(self, other):
+        '''
+        compares two Coordinates objects
+        '''
+        if not isinstance(other, Coordinates):
+            return NotImplemented
+        return (self._boardX, self._boardY) < (other._boardX, other._boardY)
 
     def __str__(self):
         '''

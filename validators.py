@@ -29,6 +29,3 @@ class ValidateBoardDimensions:
             raise CoordinateError(errors)
 
 
-
-
-

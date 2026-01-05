@@ -66,6 +66,7 @@ class TestBoard(unittest.TestCase):
 
 
 class TestValidation(unittest.TestCase):
+
     def setUp(self):
         self._board=Board(8,8)
         self._validator=ValidateBoardDimensions()
@@ -89,7 +90,81 @@ class TestValidation(unittest.TestCase):
         self.assertRaises(CoordinateError,self._validator.validatecoord,1,3,self._board)
 
 
+
+class TestEvaluate(unittest.TestCase):
+
+    def setUp(self):
+        self.board = Board(6, 6)
+        self.game = Game(self.board)
+
+    def test_empty_board(self):
+        score = self.game.evaluate(self.board)
+        self.assertEqual(score, -1040)
+
+    def test_one_move(self):
+        self.board.move('X', Coordinates(2, 2))
+        score = self.game.evaluate(self.board)
+        #Mobility decreases; score should be less negative
+        self.assertLess(score, 0)
+        self.assertGreater(score, -1040)  #less than full empty board
+
+    def test_blocked_board(self):
+        #Fill the board almost completely
+        for i in range(6):
+            for j in range(6):
+                if i == 5 and j == 5:
+                    continue
+                self.board.move('X', Coordinates(i, j))
+        score = self.game.evaluate(self.board)
+        self.assertEqual(score,0)
+
+class TestAI(unittest.TestCase):
+
+    def setUp(self):
+        self.board = Board(3, 3)
+        self.game = Game(self.board)
+
+    def test_ordered_moves(self):
+        moves = self.game.ordered_moves(self.board)
+        self.assertEqual(len(moves), 9)
+        self.board.move('O', Coordinates(0, 0))
+        moves_after = self.game.ordered_moves(self.board)
+        for move in moves_after:
+            self.assertNotEqual((move.boardX, move.boardY), (0, 0))
+            self.assertNotEqual(self.board._board[move.boardX][move.boardY], 3)
+
+        remaining_coords = [(m.boardX, m.boardY) for m in moves_after]
+        expected_coords = [(0, 2), (1, 2), (2, 0), (2, 1), (2, 2)]
+        self.assertIn(remaining_coords[0], expected_coords)
+
+    def test_minimax(self):
+        self.board.move('O', Coordinates(0,0))
+        self.board.move('O', Coordinates(0,1))
+        self.board.move('X', Coordinates(1,0))
+        self.board.move('X', Coordinates(1,1))
+
+        #Evaluate minimax for the move at (0,2) (winning move)
+        temp_board = self.board.copy()
+        temp_board.move('O', Coordinates(0,2))
+        score = self.game.minimax(temp_board, depth=3, alpha=-float('inf'), beta=float('inf'), is_maximizing=False)
+        self.assertEqual(score, 1000)
+
+    def test_move_computer(self):
+        self.assertEqual(sum(val == 2 for row in self.board._board for val in row), 0)
+        self.game.moveComputer()
+
+        o_count = sum(val == 2 for row in self.board._board for val in row)
+        self.assertEqual(o_count, 1)
+
+        total = sum(val in [0, 2, 3] for row in self.board._board for val in row)
+        self.assertEqual(total, 9)
+
+        x_count = sum(val == 1 for row in self.board._board for val in row)
+        self.assertEqual(x_count, 0)
+
+
 class TestGame(unittest.TestCase):
+
     def setUp(self):
         self._board=Board(8,8)
         self._strategy_board=Board(3,3)
@@ -101,7 +176,7 @@ class TestGame(unittest.TestCase):
         '''
         move=Coordinates(2,3)
         self._game.moveHuman(move)
-        bd=self._game.getboard()
+        bd=self._game.board
         self.assertEqual(bd._board[2][3],1)
         self.assertEqual(bd._board[1][3],3)
         self.assertEqual(bd._board[5][7],0)
@@ -111,8 +186,8 @@ class TestGame(unittest.TestCase):
         '''
         class method for testing if the computer made the move
         '''
-        self._game.moveComputer()
-        bd=self._game.getboard()
+        self._game.moveComputerSimpleLogic()
+        bd=self._game.board
         self.assertLess(len(bd.emptysquares()),64)
         self.assertGreaterEqual(len(bd.emptysquares()),55)
     def testmovecompstrategy(self):
@@ -121,29 +196,12 @@ class TestGame(unittest.TestCase):
         '''
         move=Coordinates(0,0)
         self._game2.moveHuman(move)
-        self._game2.moveComputer()
-        bd=self._game2.getboard()
+        self._game2.moveComputerSimpleLogic()
+        bd=self._game2.board
         self.assertEqual(bd._board[2][2],2)
         self.assertEqual(bd._board[2][1],3)
         move=Coordinates(2,0)
         self._game2.moveHuman(move)
         self._game2.moveComputer()
-        bd=self._game2.getboard()
+        bd=self._game2.board
         self.assertEqual(bd._board[0][2],2)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
